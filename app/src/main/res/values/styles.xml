@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="SqBtn_lightgrey" parent="Widget.AppCompat.Button">
+        <item name="android:minWidth">90dp</item>
+        <item name="android:minHeight">90dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:background">@drawable/round_button_lgrey</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:gravity">center</item>
+        <item name="backgroundTint">@null</item>
+    </style>
+
+    <style name="SqBtn_darkgrey" parent="Widget.AppCompat.Button">
+        <item name="android:minWidth">90dp</item>
+        <item name="android:minHeight">90dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:background">@drawable/round_button_dgrey</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:gravity">center</item>
+        <item name="backgroundTint">@null</item>
+    </style>
+
+    <style name="SqBtn_pink" parent="Widget.AppCompat.Button">
+        <item name="android:minWidth">90dp</item>
+        <item name="android:minHeight">90dp</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:background">@drawable/round_button_pink</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:gravity">center</item>
+        <item name="backgroundTint">@null</item>
+    </style>
+
+</resources>

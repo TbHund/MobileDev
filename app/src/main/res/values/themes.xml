@@ -1,0 +1,21 @@
+<resources xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Calculator" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:windowBackground">@drawable/fonme</item>
+    </style>
+
+    <style name="Theme.Calculator" parent="Base.Theme.Calculator" />
+
+    <style name="Theme.Splash" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Устанавливаем наш drawable как фон -->
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <!-- Прячем ActionBar на время загрузки -->
+        <item name="android:windowNoTitle">true</item>
+        <!-- Цвет статус-бара -->
+        <item name="android:statusBarColor">@color/white</item>
+    </style>
+
+</resources>
