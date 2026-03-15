@@ -9,8 +9,26 @@ import androidx.core.view.WindowInsetsCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
+    // firebase
+    private FirebaseHistoryManager historyManager;
+    private TextView historyTextView;
+
+    // theme
+    private ThemeManager themeManager;
+
+
+    // weather
+    private TextView cityName, weatherDesc, temperature, weatherIcon;
+    private final String API_KEY = "ae8a86580d0740e7a2673721261503";
+    private final String CITY = "Минск";
+
 
     private TextView Label1;
     private TextView Label2;
@@ -28,8 +46,89 @@ public class MainActivity extends AppCompatActivity {
         Label1 = findViewById(R.id.Label1);
         Label2 = findViewById(R.id.Label2);
 
+        historyManager = new FirebaseHistoryManager();
+        themeManager = new ThemeManager(this);
+        historyTextView = findViewById(R.id.historyTextView);
+
         Label1.setText("0");
         Label2.setText("");
+
+        cityName = findViewById(R.id.cityName);
+        weatherDesc = findViewById(R.id.weatherDesc);
+        temperature = findViewById(R.id.temperature);
+        weatherIcon = findViewById(R.id.weatherIcon);
+
+        themeManager.fetchAndApply();
+        loadWeather();
+        loadHistory();
+        checkFCMToken();
+    }
+
+    private void loadWeather() {
+        ApiClient.getService()
+                .getCurrentWeather(API_KEY, CITY, "ru")
+                .enqueue(new Callback<WeatherData>() {
+                    @Override
+                    public void onResponse(Call<WeatherData> call, Response<WeatherData> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            WeatherData weather = response.body();
+
+                            cityName.setText(weather.getLocation().getName());
+                            weatherDesc.setText(weather.getCurrent().getCondition().getText());
+
+                            int temp = (int) Math.round(weather.getCurrent().getTempC());
+                            String tempText = (temp > 0 ? "+" : "") + temp + "°";
+                            temperature.setText(tempText);
+
+                            weatherIcon.setText(getWeatherEmoji(weather.getCurrent().getCondition().getText()));
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<WeatherData> call, Throwable t) {
+                        Toast.makeText(MainActivity.this, "Ошибка: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private String getWeatherEmoji(String condition) {
+        condition = condition.toLowerCase();
+        if (condition.contains("солн") || condition.contains("ясн")) return "☀️";
+        if (condition.contains("облач")) return "☁️";
+        if (condition.contains("дожд")) return "🌧️";
+        if (condition.contains("снег")) return "❄️";
+        if (condition.contains("гроз")) return "⛈️";
+        if (condition.contains("туман")) return "🌫️";
+        return "☀️";
+    }
+
+    private void checkFCMToken() {
+        String token = MyFirebaseMessagingService.getToken(this);
+        if (token != null) {
+            Log.d("FCM Token", "Токен устройства: " + token);
+            Toast.makeText(this, "FCM готов", Toast.LENGTH_SHORT).show();
+        } else {
+            Log.d("FCM Token", "Токен ещё не получен");
+        }
+    }
+
+    private void loadHistory() {
+        historyManager.loadHistory()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    StringBuilder historyText = new StringBuilder();
+                    for (CalculationHistory history :
+                            queryDocumentSnapshots.toObjects(CalculationHistory.class)) {
+                        historyText.append(history.getExpression())
+                                .append(" ")
+                                .append(history.getResult())
+                                .append("\n");
+                    }
+                    historyTextView.setText(historyText.toString());
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firebase", "Ошибка загрузки истории", e);
+                    historyTextView.setText("Не удалось загрузить историю");
+                });
     }
 
     private void handleDigit(String digit) {
@@ -215,6 +314,15 @@ public class MainActivity extends AppCompatActivity {
                     }
                     number = res;
                 }
+                //firebase
+                historyManager.saveCalculation(Label2.getText().toString(), Label1.getText().toString())
+                        .addOnSuccessListener(aVoid -> {
+                            Log.d("Firebase", "Сохранено успешно");
+                            loadHistory();
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e("Firebase", "Ошибка сохранения", e);
+                        });
                 break;
 
             case "%":
@@ -263,7 +371,7 @@ public class MainActivity extends AppCompatActivity {
                         String helper = "sqr(" + number + ")";
                         Label2.setText(helper);
                     } else {
-                        String replaced = label2Text.replaceAll("\\(\\d+\\)", "(" + number + ")");
+                        String replaced = label2Text.replaceAll("\\((\\d+\\.?\\d*)\\)", "(" + number + ")");
                         Label2.setText(replaced);
                     }
                 }
@@ -288,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
                         String helper = "sqrt(" + number + ")";
                         Label2.setText(helper);
                     } else {
-                        String replaced = label2Text.replaceAll("\\(\\d+\\)", "(" + number + ")");
+                        String replaced = label2Text.replaceAll("\\((\\d+\\.?\\d*)\\)", "(" + number + ")");
                         Label2.setText(replaced);
                     }
                 }
@@ -318,7 +426,7 @@ public class MainActivity extends AppCompatActivity {
                         String helper = "1/(" + number + ")";
                         Label2.setText(helper);
                     } else {
-                        String replaced = label2Text.replaceAll("\\(\\d+\\)", "(" + number + ")");
+                        String replaced = label2Text.replaceAll("\\((\\d+\\.?\\d*)\\)", "(" + number + ")");
                         Label2.setText(replaced);
                     }
                 }
