@@ -14,6 +14,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import android.util.Log;
+import com.example.calculator.security.PinAuthActivity;
+import com.example.calculator.security.PinManager;
+import com.example.calculator.security.PinSetupActivity;
+import android.content.Intent;
 
 public class MainActivity extends AppCompatActivity {
     // firebase
@@ -33,19 +37,61 @@ public class MainActivity extends AppCompatActivity {
     private TextView Label1;
     private TextView Label2;
 
+    //pin
+    private PinManager pinManager;
+
+    private static final int REQUEST_CODE_PIN_SETUP = 1001;
+    private static final int REQUEST_CODE_PIN_AUTH = 1002;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+
+        pinManager = new PinManager(this);
+
+        if (pinManager.isAuthenticated()) {
+            initializeMainUI();
+        } else {
+            if (!pinManager.isPinSet()) {
+                startActivityForResult(new Intent(this, PinSetupActivity.class), REQUEST_CODE_PIN_SETUP);
+            } else {
+                startActivityForResult(new Intent(this, PinAuthActivity.class), REQUEST_CODE_PIN_AUTH);
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_PIN_SETUP) {
+            if (resultCode == RESULT_OK) {
+                startActivityForResult(new Intent(this, PinAuthActivity.class), REQUEST_CODE_PIN_AUTH);
+            } else {
+                finish();
+            }
+        } else if (requestCode == REQUEST_CODE_PIN_AUTH) {
+            if (resultCode == RESULT_OK) {
+                finish();
+            } else {
+                finish();
+            }
+        }
+    }
+
+    private void initializeMainUI() {
         setContentView(R.layout.activity_main);
+
+        EdgeToEdge.enable(this);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
         Label1 = findViewById(R.id.Label1);
         Label2 = findViewById(R.id.Label2);
-
         historyManager = new FirebaseHistoryManager();
         themeManager = new ThemeManager(this);
         historyTextView = findViewById(R.id.historyTextView);
@@ -64,6 +110,13 @@ public class MainActivity extends AppCompatActivity {
         checkFCMToken();
     }
 
+    private void logout() {
+        pinManager.clearAuthentication();
+        Intent intent = new Intent(this, PinAuthActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
     private void loadWeather() {
         ApiClient.getService()
                 .getCurrentWeather(API_KEY, CITY, "ru")
@@ -171,6 +224,10 @@ public class MainActivity extends AppCompatActivity {
     boolean inputAfterOperation = false;
     boolean afterEqualsButton = false;
     boolean skip = false;
+
+    public void onButtonExitClick(View view) {
+       logout();
+    }
     public void onButtonClick(View view) {
         Button clickedButton = (Button) view;
         String buttonText = clickedButton.getText().toString();

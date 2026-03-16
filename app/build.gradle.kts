@@ -59,4 +59,8 @@ dependencies {
     // push
     implementation("com.google.firebase:firebase-messaging")
     implementation("androidx.core:core:1.12.0")
+    // security
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("commons-codec:commons-codec:1.15")
 }

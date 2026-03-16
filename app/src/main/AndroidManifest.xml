@@ -21,6 +21,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".security.PinSetupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".security.PinAuthActivity"
+            android:exported="false" />
         <service
             android:name=".MyFirebaseMessagingService"
             android:exported="false">
